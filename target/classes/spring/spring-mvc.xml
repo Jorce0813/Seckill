@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <!-- 1.开启SpringMVC注解模式 -->
+    <!-- 简化配置:
+        (1)自动注册DefaultAnnotationHandlerMapping 和 AnnotationMethodHandlerAdapter
+        <<- 不使用mvc注解声明则要注入以下两个bean
+            <bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"/>
+            <bean class="org.springframework.web.servlet.mvc.annotation.DefaultAnnotationHandlerMapping"/>
+        ->>
+        (2)提供一系列:数据绑定服务,数字和日期的Format,如:@NumberFormat,@DataTimeFormat,xml,json默认的读写支持
+     -->
+    <mvc:annotation-driven/>
+
+    <!-- 2.静态资源默认servlet配置
+        (1)加入对静态资源的处理,如 .png / js / gif
+        (2)允许使用 "/" 做整体映射
+     -->
+    <mvc:default-servlet-handler/>
+
+    <!-- 3.配置视图解析器ViewResolver -->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <!-- 配置视图view的类型为支持JSTL的JSP页面 -->
+        <property name="viewClass" value="org.springframework.web.servlet.view.JstlView"/>
+        <!-- 访问路径前缀 -->
+        <property name="prefix" value="/WEB-INF/jsp/"/>
+        <!-- 访问路径后缀 -->
+        <property name="suffix" value=".jsp"/>
+    </bean>
+
+    <!-- 4.配置注解(@Controller)扫描的包package -->
+    <context:component-scan base-package="com.gdufe.seckill.web" />
+
+</beans>

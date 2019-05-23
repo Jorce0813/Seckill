@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!-- 配置Spring扫描的Service的包下所有注解的类型 && Service包下实现接口的类 -->
+    <!-- 跟配置Bean来实现类注入不同，在本项目中采用注解的方式来实现注入 -->
+    <!-- 关于Spring的常用注入解析学习: https://www.cnblogs.com/xiaoxi/p/5935009.html -->
+    <context:component-scan base-package="com.gdufe.seckill.service"/>
+
+    <!-- 配置事务管理器, MyBatis默认使用的是JDBC的事务管理方法 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!-- 注入数据库连接池,
+             编写时会出现提示红色的dataSource,因为当前的xml找不到该bean
+             但是在运行时Spring会去加载spring-dao.xml容器,所以程序不会出错-->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- 配置基于注解的声明式事务
+         默认使用注解的方式来管理事务行为-->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+</beans>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!-- 配置全局属性 -->
+    <settings>
+        <!-- 使用JDBC的getGeneratedKeys获取数据库自增的主键值 -->
+        <setting name="useGeneratedKeys" value="true"/>
+        <!-- 使用列名替换别名(解决数据库表属性名跟实体类属性名不一致的问题)
+             如: select seckill_id as seckillId from seckill
+         -->
+        <setting name="useColumnLabel" value="true"/>
+        <!-- 开启驼峰命名转换: Table(create_time)->Entity(createTime) -->
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+
+    </settings>
+</configuration>
