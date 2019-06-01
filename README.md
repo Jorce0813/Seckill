@@ -32,3 +32,5 @@
 
 (4) 重复秒杀
 ![image](https://github.com/AwayFuture/Seckill/blob/master/images/repeat_kill.png)
+
+study-source:https://www.imooc.com/u/2145618/courses?sort=publish&skill_id=0
