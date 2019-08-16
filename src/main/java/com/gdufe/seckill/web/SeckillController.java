@@ -16,6 +16,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.List;
 
@@ -34,6 +35,9 @@ public class SeckillController {
 
     @Autowired
     private SeckillService seckillService;
+
+    @Autowired
+    private HttpServletRequest request; //可用于获取前端的类似于IP地址的信息
 
     /**
      * @return java.lang.String
@@ -93,7 +97,9 @@ public class SeckillController {
     public SeckillResult<Exposer> exposeSeckillUrl(@PathVariable Long seckillId) {
         SeckillResult<Exposer> result;
         try {
-            Exposer exposer = seckillService.exportSeckillUrl(seckillId);
+            //获取访客的ip
+            String remoteAddr = request.getRemoteAddr();
+            Exposer exposer = seckillService.exportSeckillUrl(seckillId, remoteAddr);
             result = new SeckillResult<Exposer>(true, exposer);
         } catch (Exception e) {
             logger.error(e.getMessage());

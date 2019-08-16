@@ -8,6 +8,11 @@ import io.protostuff.runtime.RuntimeSchema;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * @ClassName RedisDao
  * @Description Redis操作的DAO, 用于缓存DB的数据
@@ -85,6 +90,68 @@ public class RedisDao {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * 1. 通过计算同一个IP在timeout时间内访问redis服务器的次数是否超过限制的次数limit来实现限流操作
+     * 2. 防止攻击者使用脚本进行服务器的攻击拖垮redis服务器
+     * @param ip
+     * @param limit
+     * @param timeout
+     * @return
+     */
+    public boolean accessLimit(String ip, int limit, int timeout) throws IOException {
+        //1.获取jedis连接
+        Jedis jedis = jedisPool.getResource();
+        //2.初始化key && argv[limit + timeout]
+        List<String> keys = Collections.singletonList(ip);
+        List<String> argvs = Arrays.asList(String.valueOf(limit), String.valueOf(timeout));
+
+        //3.调用lua脚本返回redis服务器判断的结果
+        //Object object = 1;
+        //System.out.println(keys + " , " + argvs);
+        //boolean flag = object == jedis.eval(loadScriptString("redis.lua"), keys, argvs);
+
+        Object result = 0;
+        try {
+            String lua =
+                    "local key = \"rate.limit:\" ..KEYS[1]\n" +
+                            "local limit = tonumber(ARGV[1])\n" +
+                            "local expire_time = ARGV[2]\n" +
+                            "local is_exists = redis.call(\"EXISTS\",key)\n" +
+                            "if is_exists == 1 then\n" +
+                            "\tif redis.call(\"INCR\",key) > limit then\n" +
+                            "\t\treturn 0\n" +
+                            "\telse\n" +
+                            "\t\treturn 1\n" +
+                            "\tend\n" +
+                            "else\n" +
+                            "\tredis.call(\"SET\",key,1)\n" +
+                            "\tredis.call(\"EXPIRE\",key,expire_time)\n" +
+                            "\treturn 1\n" +
+                            "end";
+/*            if (count > 4) {
+                System.out.println("到达访问上限啦");
+                return false;
+            } else {*/
+            result = jedis.eval(lua, keys, argvs);
+/*                count++;
+              }*/
+            System.out.println(result);
+            System.out.println("Are you true / false : ");
+            System.out.println(result == (Object) 1);
+            //System.out.println(String.valueOf(result).equals(String.valueOf(1)));
+            //System.out.println(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (jedis != null) {
+                jedis.close();
+            }
+
+        }
+        //return result == (Object) 1;
+        return String.valueOf(result).equals(String.valueOf(1));
     }
 
 }

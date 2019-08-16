@@ -3,6 +3,7 @@ package com.gdufe.seckill.service;
 import com.gdufe.seckill.Enum.SeckillStateEnum;
 import com.gdufe.seckill.dao.SeckillDao;
 import com.gdufe.seckill.dao.SuccessKillDao;
+import com.gdufe.seckill.dao.cache.JedisClusterClient;
 import com.gdufe.seckill.dao.cache.RedisDao;
 import com.gdufe.seckill.dto.Exposer;
 import com.gdufe.seckill.dto.SeckillExcution;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -48,6 +50,9 @@ public class SeckillServiceImpl implements SeckillService {
     @Autowired
     private RedisDao redisDao;
 
+    @Autowired
+    private JedisClusterClient jedisClusterClient;
+
 
     //MD5的盐值字符串,用于混淆MD5,使得MD5的过程不可逆
     private final String slat = "fasdf/.fasdf*f&%$#@^fasd464565fads//&^&^&``";
@@ -60,7 +65,33 @@ public class SeckillServiceImpl implements SeckillService {
         return seckillDao.queryById(seckillId);
     }
 
-    public Exposer exportSeckillUrl(long seckillId) {
+    public Exposer exportSeckillUrl(long seckillId, String remoteAddr) {
+        /*
+         * 点击[详情]进入秒杀详情页时->
+         * 在秒杀开启前/秒杀进行中/秒杀结束时(秒杀服务器没停止服务)->
+         * 有攻击者用脚本进行页面的循环机械刷新访问redis服务器时->
+         * 做redis限流控制,防止redis服务器被类似的请求拖垮
+         */
+        //start-限流
+        int limit = 5; //timeout时间内限制访问次数
+        int timeout = 60; //设置过期时间,单位:s
+        boolean result = false;
+        try {
+            System.out.println("fuck redis1");
+            //result = redisDao.accessLimit(remoteAddr, limit, timeout);
+            //20190816接入redis集群
+            result = jedisClusterClient.accessLimit(remoteAddr,limit,timeout);
+            System.out.println("fuck redis");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (!result) { //代表访问受限
+            System.out.println("Please stop Attack!!!");
+            //return new Exposer(false, seckillId);
+            return null;
+        }
+        //end-限流
+
         //利用Redis进行缓存的优化:超时维护数据的一致性???
         /*
          * if (redis存在seckillId的对象){
@@ -74,14 +105,18 @@ public class SeckillServiceImpl implements SeckillService {
          *      }
          * }
          */
-        Seckill seckill = redisDao.getSeckill(seckillId);
+        //Seckill seckill = redisDao.getSeckill(seckillId);
+        //20190816接入redis集群
+        //Seckill seckill = redisDao.getSeckill(seckillId);
+        Seckill seckill = jedisClusterClient.get(seckillId + "");
 
         if (seckill == null) {
             seckill = seckillDao.queryById(seckillId);
             if (seckill == null) {
                 return new Exposer(false, seckillId);
             } else {
-                redisDao.putSeckill(seckill);
+               // redisDao.putSeckill(seckill);
+                jedisClusterClient.set(seckill);
             }
         }
 

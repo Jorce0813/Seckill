@@ -46,7 +46,7 @@ public interface SeckillService {
      * @Param [seckillId]
      * @return com.gdufe.seckill.dto.Exposer
      **/
-    Exposer exportSeckillUrl(long seckillId);
+    Exposer exportSeckillUrl(long seckillId,String remoteAddr);
 
     /**
      * RepeatException 和 SeckillCloseException 都是继承自 SeckillException,

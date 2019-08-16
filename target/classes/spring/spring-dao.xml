@@ -53,11 +53,69 @@
         <property name="basePackage" value="com.gdufe.seckill.dao" />
     </bean>
 
-    <!-- 配置Redis操作的Dao -->
+    <!-- 配置Redis操作的Dao 单击版的redis -->
     <bean id="redisDao" class="com.gdufe.seckill.dao.cache.RedisDao">
         <!-- Redis部署在Linux上 -->
-        <constructor-arg index="0" value="192.168.254.128" />
+        <constructor-arg index="0" value="192.168.154.128" />
         <constructor-arg index="1" value="6379" />
     </bean>
+
+    <!-- 20190816 引入redis集群的配置 -->
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <!-- 最大连接数 -->
+        <property name="maxTotal" value="100"/>
+        <!-- 最大空闲连接数 -->
+        <property name="maxIdle" value="300"/>
+        <!-- 每次释放连接的最大数目 -->
+        <property name="numTestsPerEvictionRun" value="1024"/>
+        <!-- 释放连接的扫描间隔（毫秒） -->
+        <property name="timeBetweenEvictionRunsMillis" value="30000"/>
+        <!-- 连接最小空闲时间 -->
+        <property name="minEvictableIdleTimeMillis" value="1800000"/>
+        <!-- 连接空闲多久后释放, 当空闲时间>该值 且 空闲连接>最大空闲连接数 时直接释放 -->
+        <property name="softMinEvictableIdleTimeMillis" value="10000"/>
+        <!-- 获取连接时的最大等待毫秒数,小于零:阻塞不确定的时间,默认-1 -->
+        <!--<property name="maxWaitMillis" value="1500"/>-->
+        <!-- 在获取连接的时候检查有效性, 默认false -->
+        <property name="testOnBorrow" value="true"/>
+        <!-- 在空闲时检查有效性, 默认false -->
+        <property name="testWhileIdle" value="true"/>
+        <!-- 连接耗尽时是否阻塞, false报异常,ture阻塞直到超时, 默认true -->
+        <property name="blockWhenExhausted" value="false"/>
+    </bean>
+
+    <bean id="redisClient" class="redis.clients.jedis.JedisCluster">
+        <constructor-arg name="nodes">
+            <set>
+                <bean class="redis.clients.jedis.HostAndPort">
+                    <constructor-arg name="host" value="192.168.154.128"/>
+                    <constructor-arg name="port" value="7001"/>
+                </bean>
+                <bean class="redis.clients.jedis.HostAndPort">
+                    <constructor-arg name="host" value="192.168.154.128"/>
+                    <constructor-arg name="port" value="7002"/>
+                </bean>
+                <bean class="redis.clients.jedis.HostAndPort">
+                    <constructor-arg name="host" value="192.168.154.128"/>
+                    <constructor-arg name="port" value="7003"/>
+                </bean>
+                <bean class="redis.clients.jedis.HostAndPort">
+                    <constructor-arg name="host" value="192.168.154.128"/>
+                    <constructor-arg name="port" value="7004"/>
+                </bean>
+                <bean class="redis.clients.jedis.HostAndPort">
+                    <constructor-arg name="host" value="192.168.154.128"/>
+                    <constructor-arg name="port" value="7005"/>
+                </bean>
+                <bean class="redis.clients.jedis.HostAndPort">
+                    <constructor-arg name="host" value="192.168.154.128"/>
+                    <constructor-arg name="port" value="7006"/>
+                </bean>
+            </set>
+        </constructor-arg>
+        <!-- redis连接池的连接参数 -->
+        <constructor-arg name="poolConfig" ref="jedisPoolConfig" />
+    </bean>
+    <bean id="jedisClusterClient" class="com.gdufe.seckill.dao.cache.JedisClusterClient" />
 
 </beans>
